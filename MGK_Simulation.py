@@ -78,9 +78,6 @@ plt.show()
 #############################################################################################################
 #_____________________________Implementing the SITTA policy____________________________
     
-mu1 = mu * 1
-mu2 = mu - mu1 
-cutoff = 50000
 
 
 def simulate_sita_queue(lambda_rate, mu1, mu2, cutoff, num_jobs=1000000):
@@ -140,10 +137,6 @@ def theoretical_mean_response_sita(lambda_rate, mu1, mu2, prob_small):
     variance_service_time_1 = scv * (mean_service_time_1 ** 2)
     variance_service_time_2 = scv * (mean_service_time_2 ** 2)
 
-
-    # rho1 = lambda_rate * (1 / mu1) * (1 - scv / (scv + 1))
-    # rho2 = lambda_rate * (1 / mu2) * (scv / (scv + 1))
-
     rho1 = (prob_small)*lambda_rate * mean_service_time_1
     rho2 = (1-prob_small)*lambda_rate * mean_service_time_2
 
@@ -155,11 +148,44 @@ def theoretical_mean_response_sita(lambda_rate, mu1, mu2, prob_small):
     
     E_T1 = mean_service_time_1 + ((prob_small)*lambda_rate * E_S1_sqrd) / (2 * (1 - rho1))
     E_T2 = mean_service_time_2 + ((1-prob_small)*lambda_rate * E_S2_sqrd) / (2 * (1 - rho2))
-    
-    # print("ET1 = ",E_T1)
-    # print("ET2 = ",E_T2)
 
     return E_T1, E_T2
+
+# function to return the optimal values for the cutOff and the ratio of mu1, mu2
+def optimise_environment(lambda_rate):
+    min_mean_resp_time = np.inf
+    optimal_cutoff = 0
+    optimal_ratio = 0
+    for ratio in np.arange(0.1, 0.6, 0.2): # try all the posibble combinations for mu1, mu2 ratio 
+        for  cutoff in np.arange(5,50,5):   
+            mu1 = mu * ratio
+            mu2 = mu - mu1
+    
+            mean_to_append,prob_small = simulate_sita_queue(lambda_rate, mu1, mu2, cutoff)
+            # simulated_mean_responses_sita.append(mean_to_append)
+            # print("prob: ",prob_small)
+
+            E_T1, E_T2 = theoretical_mean_response_sita(lambda_rate, mu1, mu2,prob_small)
+            if min_mean_resp_time > ((prob_small)*E_T1 + (1-prob_small)*E_T2):
+                min_mean_resp_time = ((prob_small)*E_T1 + (1-prob_small)*E_T2)
+                optimal_cutoff = cutoff
+                optimal_ratio = ratio
+
+    
+    return optimal_ratio, optimal_cutoff
+
+
+# Optimal values for rho = 0.5  -> λ = 0.05
+ratio1, cutoff1 = optimise_environment(0.05)
+# Optimal values for rho = 0.9  -> λ = 0.09
+ratio2, cutoff2 = optimise_environment(0.09)
+
+print(f"Ratio1 = {ratio1}, CutOff1 = {cutoff1}")
+print(f"Ratio2 = {ratio2}, CutOff2 = {cutoff2}")
+
+# optimal values for ρ = 0.5
+mu1 = mu * ratio1
+mu2 = mu - mu1 
 
 
 # Initialize lists to store results
@@ -168,10 +194,40 @@ theoretical_mean_responses_sita = []
 
 # Run simulations for each λ value
 for lambda_rate in lambda_vals:
-    mean_to_append,prob_small = simulate_sita_queue(lambda_rate, mu1, mu2, cutoff)
+    mean_to_append,prob_small = simulate_sita_queue(lambda_rate, mu1, mu2, cutoff1)
     simulated_mean_responses_sita.append(mean_to_append)
     print("prob: ",prob_small)
-    #simulated_mean_responses_sita.append(simulate_sita_queue(lambda_rate, mu1, mu2, cutoff))
+
+    E_T1, E_T2 = theoretical_mean_response_sita(lambda_rate, mu1, mu2,prob_small)
+    theoretical_mean_responses_sita.append((prob_small)*E_T1 + (1-prob_small)*E_T2)
+
+# Plot results
+plt.figure()
+plt.plot(lambda_vals, simulated_mean_responses_sita, label='Simulated Mean Response Time SITA', marker='o')
+plt.plot(lambda_vals, theoretical_mean_responses_sita, label='Theoretical Mean Response Time SITA', marker='x')
+plt.xlabel('Arrival Rate (λ)')
+plt.ylabel('Mean Response Time (E[T])')
+plt.title('M/G/1/FCFS Queue Mean Response Time with SITA Policy and Log-Normal Distribution')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+############################################################################################
+# optimal values for ρ = 0.9
+mu1 = mu * ratio2
+mu2 = mu - mu1 
+
+
+# Initialize lists to store results
+simulated_mean_responses_sita = []
+theoretical_mean_responses_sita = []
+
+# Run simulations for each λ value
+for lambda_rate in lambda_vals:
+    mean_to_append,prob_small = simulate_sita_queue(lambda_rate, mu1, mu2, cutoff2)
+    simulated_mean_responses_sita.append(mean_to_append)
+    #print("prob: ",prob_small)
+
     E_T1, E_T2 = theoretical_mean_response_sita(lambda_rate, mu1, mu2,prob_small)
     theoretical_mean_responses_sita.append((prob_small)*E_T1 + (1-prob_small)*E_T2)
 
