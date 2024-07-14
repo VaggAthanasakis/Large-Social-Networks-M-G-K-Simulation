@@ -12,8 +12,8 @@ E_S_sqrd = variance_service_time + mean_service_time ** 2    # E[s^2] = variance
 # Calculate log-normal parameters mu and sigma
 sigma_squared = np.log(variance_service_time / (mean_service_time ** 2) + 1)
 mu = np.log(mean_service_time) - sigma_squared / 2
-print(mu)
-print(sigma_squared)
+# print(mu)
+# print(sigma_squared)
 
 # Generate service times from log-normal distribution
 def generate_service_times(n, mu, sigma_squared):
@@ -161,9 +161,9 @@ def optimise_environment(lambda_rate):
             mu1 = mu * ratio
             mu2 = mu - mu1
     
-            mean_to_append,prob_small = simulate_sita_queue(lambda_rate, mu1, mu2, cutoff)
+            _,prob_small = simulate_sita_queue(lambda_rate, mu1, mu2, cutoff)
             # simulated_mean_responses_sita.append(mean_to_append)
-            # print("prob: ",prob_small)
+            #print("prob: ",prob_small)
 
             E_T1, E_T2 = theoretical_mean_response_sita(lambda_rate, mu1, mu2,prob_small)
             if min_mean_resp_time > ((prob_small)*E_T1 + (1-prob_small)*E_T2):
@@ -180,10 +180,11 @@ ratio1, cutoff1 = optimise_environment(0.05)
 # Optimal values for rho = 0.9  -> λ = 0.09
 ratio2, cutoff2 = optimise_environment(0.09)
 
-print(f"Ratio1 = {ratio1}, CutOff1 = {cutoff1}")
-print(f"Ratio2 = {ratio2}, CutOff2 = {cutoff2}")
+print(f"For rho = 0.5 the optimal parameters are -> Ratio1 = {ratio1}, CutOff1 = {cutoff1}")
+print(f"For rho = 0.9 the optimal parameters are -> Ratio2 = {ratio2}, CutOff2 = {cutoff2}")
 
-# optimal values for ρ = 0.5
+##############################################################################
+# using the optimal parameters for ρ = 0.5
 mu1 = mu * ratio1
 mu2 = mu - mu1 
 
@@ -203,7 +204,7 @@ for lambda_rate in lambda_vals:
 
 # Plot results
 plt.figure()
-plt.plot(lambda_vals, simulated_mean_responses_sita, label='Simulated Mean Response Time SITA', marker='o')
+plt.plot(lambda_vals, simulated_mean_responses_sita, label='Optimization with SITA', marker='o')
 plt.plot(lambda_vals, theoretical_mean_responses_sita, label='Theoretical Mean Response Time SITA', marker='x')
 plt.xlabel('Arrival Rate (λ)')
 plt.ylabel('Mean Response Time (E[T])')
@@ -213,31 +214,31 @@ plt.grid(True)
 plt.show()
 
 ############################################################################################
-# optimal values for ρ = 0.9
-mu1 = mu * ratio2
-mu2 = mu - mu1 
+# # optimal values for ρ = 0.9
+# mu1 = mu * ratio2
+# mu2 = mu - mu1 
 
 
-# Initialize lists to store results
-simulated_mean_responses_sita = []
-theoretical_mean_responses_sita = []
+# # Initialize lists to store results
+# simulated_mean_responses_sita = []
+# theoretical_mean_responses_sita = []
 
-# Run simulations for each λ value
-for lambda_rate in lambda_vals:
-    mean_to_append,prob_small = simulate_sita_queue(lambda_rate, mu1, mu2, cutoff2)
-    simulated_mean_responses_sita.append(mean_to_append)
-    #print("prob: ",prob_small)
+# # Run simulations for each λ value
+# for lambda_rate in lambda_vals:
+#     mean_to_append,prob_small = simulate_sita_queue(lambda_rate, mu1, mu2, cutoff2)
+#     simulated_mean_responses_sita.append(mean_to_append)
+#     print("prob: ",prob_small)
 
-    E_T1, E_T2 = theoretical_mean_response_sita(lambda_rate, mu1, mu2,prob_small)
-    theoretical_mean_responses_sita.append((prob_small)*E_T1 + (1-prob_small)*E_T2)
+#     E_T1, E_T2 = theoretical_mean_response_sita(lambda_rate, mu1, mu2,prob_small)
+#     theoretical_mean_responses_sita.append((prob_small)*E_T1 + (1-prob_small)*E_T2)
 
-# Plot results
-plt.figure()
-plt.plot(lambda_vals, simulated_mean_responses_sita, label='Simulated Mean Response Time SITA', marker='o')
-plt.plot(lambda_vals, theoretical_mean_responses_sita, label='Theoretical Mean Response Time SITA', marker='x')
-plt.xlabel('Arrival Rate (λ)')
-plt.ylabel('Mean Response Time (E[T])')
-plt.title('M/G/1/FCFS Queue Mean Response Time with SITA Policy and Log-Normal Distribution')
-plt.legend()
-plt.grid(True)
-plt.show()
+# # Plot results
+# plt.figure()
+# plt.plot(lambda_vals, simulated_mean_responses_sita, label='Optimization with SITA (ρ = 0.9)', marker='o')
+# plt.plot(lambda_vals, theoretical_mean_responses_sita, label='Theoretical Mean Response Time SITA', marker='x')
+# plt.xlabel('Arrival Rate (λ)')
+# plt.ylabel('Mean Response Time (E[T])')
+# plt.title('M/G/1/FCFS Queue Mean Response Time with SITA Policy and Log-Normal Distribution')
+# plt.legend()
+# plt.grid(True)
+# plt.show()
